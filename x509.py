@@ -3,8 +3,6 @@ from asn1crypto.x509 import Certificate, TbsCertificate
 from asn1crypto.csr import CertificationRequest, CertificationRequestInfo
 from asn1crypto.core import (
     OctetBitString,
-    OctetString,
-    ObjectIdentifier,
     ParsableOctetBitString,
 )
 from asn1crypto.algos import SignedDigestAlgorithmId, SignedDigestAlgorithm
@@ -23,9 +21,8 @@ def CertificateTbsRebuilder(certificate: bytes, public_key: bytes) -> bytes:
     """
     cert = Certificate.load(certificate)
     tbs = cert["tbs_certificate"]
-    tbs = tbs["subject_public_key_info"]["public_key"] = ParsableOctetBitString(
-        public_key
-    )
+    subject_pk_info = PublicKeyInfo.load(public_key)
+    tbs["subject_public_key_info"] = subject_pk_info
     return tbs.dump(force=True)
 
 
