@@ -1,4 +1,4 @@
-name: sign-elsewhere
+name: Unittests
 
 on: [push]
 
