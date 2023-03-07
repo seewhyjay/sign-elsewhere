@@ -14,7 +14,7 @@ from cryptography.x509 import (
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 
-sys.path.append('../sign-elsewhere')
+sys.path.append("../sign-elsewhere")
 from x509 import (
     CertificateRebuilder,
     CertificateTbsRebuilder,
@@ -113,45 +113,47 @@ def test_certificate():
         Encoding.DER, PublicFormat.SubjectPublicKeyInfo
     )
 
-
     # Lifted from here https://cryptography.io/en/latest/x509/tutorial/
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"My Company"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"mysite.com"),
-    ])
-    cert = x509.CertificateBuilder().subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        # This is actually unnecessary, you can just use signing pub here
-        # I'm using the placeholder to test CertificateTbsRebuilder
-        rsa_placeholder_priv.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.datetime.utcnow()
-    ).not_valid_after(
-        # Our certificate will be valid for 10 days
-        datetime.datetime.utcnow() + datetime.timedelta(days=10)
-    ).add_extension(
-        x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),
-        critical=False,
-    # Sign our certificate with our private key
-    ).sign(rsa_placeholder_priv, hashes.SHA256())
-    
-    tbs = CertificateTbsRebuilder(cert.public_bytes(Encoding.DER), rsa_signing_pub_der)
-    
-    signature = rsa_signing_priv.sign(
-        tbs, padding.PKCS1v15(), hashes.SHA256()
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+            x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "California"),
+            x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "mysite.com"),
+        ]
     )
-    
-    cert_bytes = CertificateRebuilder(tbs, 'sha256_rsa', signature)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(
+            # This is actually unnecessary, you can just use signing pub here
+            # I'm using the placeholder to test CertificateTbsRebuilder
+            rsa_placeholder_priv.public_key()
+        )
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.utcnow())
+        .not_valid_after(
+            # Our certificate will be valid for 10 days
+            datetime.datetime.utcnow()
+            + datetime.timedelta(days=10)
+        )
+        .add_extension(
+            x509.SubjectAlternativeName([x509.DNSName("localhost")]),
+            critical=False,
+            # Sign our certificate with our private key
+        )
+        .sign(rsa_placeholder_priv, hashes.SHA256())
+    )
+
+    tbs = CertificateTbsRebuilder(cert.public_bytes(Encoding.DER), rsa_signing_pub_der)
+
+    signature = rsa_signing_priv.sign(tbs, padding.PKCS1v15(), hashes.SHA256())
+
+    cert_bytes = CertificateRebuilder(tbs, "sha256_rsa", signature)
     cert = x509.load_der_x509_certificate(cert_bytes)
-    
+
     rsa_signing_pub.verify(
         cert.signature,
         cert.tbs_certificate_bytes,
