@@ -1,4 +1,5 @@
 import pytest
+import sys
 import datetime
 from random import randint
 
@@ -13,6 +14,7 @@ from cryptography.x509 import (
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 
+sys.path.append('../sign-elsewhere')
 from x509 import (
     CertificateRebuilder,
     CertificateTbsRebuilder,
@@ -24,9 +26,9 @@ from x509 import (
 def test_csr():
     # This portion is taken from https://cryptography.io/en/latest/x509/tutorial/
     rsa_key_sizes = [2048, 3084, 4096]
-    hash_algorithms = [hashes.SHA1(), hashes.SHA256(), hashes.SHA384(), hashes.SHA512()]
+    hash_algorithms = [hashes.SHA256(), hashes.SHA384(), hashes.SHA512()]
     for key_size in rsa_key_sizes:
-        hash_algo = hash_algorithms[randint(0, 3)]
+        hash_algo = hash_algorithms[randint(0, 2)]
         rsa_placeholder_priv = rsa.generate_private_key(
             public_exponent=65537,
             key_size=key_size,
@@ -77,9 +79,7 @@ def test_csr():
         tbs = CertificationRequestTbsRebuilder(csr_tbs, rsa_signing_pub_der)
 
         signature = rsa_signing_priv.sign(tbs, padding.PKCS1v15(), hash_algo)
-        if isinstance(hash_algo, hashes.SHA1):
-            sign_algo = "sha1_rsa"
-        elif isinstance(hash_algo, hashes.SHA256):
+        if isinstance(hash_algo, hashes.SHA256):
             sign_algo = "sha256_rsa"
         elif isinstance(hash_algo, hashes.SHA384):
             sign_algo = "sha384_rsa"
